@@ -16,7 +16,7 @@ GUI.req("Classes/Class - Button.lua")()
 if missing_lib then return 0 end
 
 GUI.name = "AMT"
-GUI.x, GUI.y, GUI.w, GUI.h = 0, 0, 134, 267
+GUI.x, GUI.y, GUI.w, GUI.h = 0, 0, 134, 212
 GUI.anchor, GUI.corner = "mouse", "C"
 
 -- Function to get the take associated with a MIDI item
@@ -117,16 +117,30 @@ function generate_midi()
         start_time = math.abs(math.floor(start_time / ticksPerQuarterNote * AMT_PPQ))
         end_time = math.abs(math.floor(end_time / ticksPerQuarterNote * AMT_PPQ))
 
-        -- Let AMT know we're using ticks (use_ticks) instead of seconds
-        command_params = command_params .. " -u"
-
         -- Move cursor so new midi will start at same time as old midi
         reaper.SetEditCurPos(midi_start_time, false, false)
     else
         -- When generating new midi, duration will equal loop time range
+        local project = reaper.EnumProjects(-1, "")
+        
+        -- Use bpm of project as reference
+        local bpm = reaper.GetProjectTimeSignature2(project, 0)
+        local idx = reaper.FindTempoTimeSigMarker(project, start_time)
+        
+        -- If there's a tempo change before the start time, use that as tempo
+        if idx > -1 then
+            local _, bpm = reaper.GetTempoTimeSigMarker(project, idx)
+        end
+
         end_time = end_time - start_time
         start_time = 0
+
+        -- Convert seconds to ticks
+        end_time = end_time * AMT_PPQ * (bpm / 60)
     end
+
+    -- Let AMT know we're using ticks (use_ticks) instead of seconds
+    command_params = command_params .. " -u"
 
     -- Determine if using accompany or replace mode
     local mode = GUI.Val("Mode")
@@ -222,32 +236,32 @@ GUI.New("BigMode", "Checklist", {
     opt_size = 20
 })
 
-GUI.New("delta", "Slider", {
-    z = 11,
-    x = 16,
-    y = 185,
-    w = 101,
-    caption = "Delta",
-    min = 1,
-    max = 20,
-    defaults = {40},
-    inc = 0.1,
-    dir = "h",
-    font_a = 3,
-    font_b = 4,
-    col_txt = "txt",
-    col_fill = "elm_fill",
-    bg = "wnd_bg",
-    show_handles = true,
-    show_values = true,
-    cap_x = 0,
-    cap_y = 0
-})
+-- GUI.New("delta", "Slider", {
+--     z = 11,
+--     x = 16,
+--     y = 185,
+--     w = 101,
+--     caption = "Delta",
+--     min = 1,
+--     max = 20,
+--     defaults = {40},
+--     inc = 0.1,
+--     dir = "h",
+--     font_a = 3,
+--     font_b = 4,
+--     col_txt = "txt",
+--     col_fill = "elm_fill",
+--     bg = "wnd_bg",
+--     show_handles = true,
+--     show_values = true,
+--     cap_x = 0,
+--     cap_y = 0
+-- })
 
 GUI.New("new_midi", "Button", {
     z = 11,
     x = 16,
-    y = 221,
+    y = 165,
     w = 100,
     h = 24,
     caption = "Generate",

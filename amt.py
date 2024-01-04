@@ -10,7 +10,7 @@ import winsound
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-p', '--p', required=False, default=0.98, type=float)
-parser.add_argument('-t', '--delta', required=False, default=5, type=float)
+#parser.add_argument('-t', '--delta', required=False, default=5, type=float)
 parser.add_argument('-m', '--midi_file_path', required=False, default="", type=str)
 parser.add_argument('-s', '--start', required=False, default=0, type=float)
 parser.add_argument('-e', '--end', required=False, default=10, type=float)
@@ -27,7 +27,7 @@ start = args.start
 end = args.end
 use_seconds = not args.use_ticks
 p = args.p
-delta = args.delta
+#delta = args.delta
 replace = args.replace
 big_mode = args.big_mode
 notification_file_path = args.notification_file_path
@@ -72,7 +72,7 @@ def generate_midi():
         end /= TIME_RESOLUTION
 
     # Generate events and write as midi to file
-    inpainted = generate(model, start, end, inputs=history, controls=anticipated, top_p=p, delta=delta)
+    inpainted = generate(model, start, end, inputs=history, controls=anticipated, top_p=p)#, delta=delta)
     midify(ops.combine(inpainted, anticipated))
 
     # If a sound was provided, play it to notify script completion
