@@ -89,6 +89,7 @@ function generate_midi()
     local selected_midi_source = GetSelectedMIDISource()
     local command_params = ""
     local start_time, end_time = reaper.GetSet_LoopTimeRange2(0, false, false, 0, 0, false)
+    local cursor_endpoint = start_time
 
     -- If no loop time range is selected, stop
     if end_time - start_time <= 0 then
@@ -117,8 +118,7 @@ function generate_midi()
         start_time = math.abs(math.floor(start_time / ticksPerQuarterNote * AMT_PPQ))
         end_time = math.abs(math.floor(end_time / ticksPerQuarterNote * AMT_PPQ))
 
-        -- Move cursor so new midi will start at same time as old midi
-        reaper.SetEditCurPos(midi_start_time, false, false)
+        cursor_endpoint = midi_start_time
     else
         -- When generating new midi, duration will equal loop time range
         local project = reaper.EnumProjects(-1, "")
@@ -168,9 +168,14 @@ function generate_midi()
     local command_full = script_path .. "myenv\\Scripts\\python.exe " .. script_path .. "\\amt.py"
     command_full = command_full .. " " .. command_params
     os.execute(command_full)
+
+    -- Move cursor so new midi will start at same time as old midi
+    reaper.SetEditCurPos(cursor_endpoint, false, false)
     
     -- Insert the new midi into the project and delete the buffer
     midi = reaper.InsertMedia(midi_buffer_path, 1)
+
+    -- Delete the midi buffer
     os.remove(midi_buffer_path)
 end
 
